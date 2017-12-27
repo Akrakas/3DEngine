@@ -1,0 +1,26 @@
+[
+	{
+		"start_after":10,
+		"vx":0,
+		"vy":1,
+		"vz":5
+	},
+	{
+		"start_after":10,
+		"vx":-1,
+		"vy":0,
+		"vz":5
+	},
+	{
+		"start_after":10,
+		"vx":0,
+		"vy":0,
+		"vz":-10
+	},
+	{
+		"start_after":10,
+		"vx":0,
+		"vy":0,
+		"vz":0
+	}
+]

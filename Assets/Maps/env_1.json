@@ -1,0 +1,61 @@
+{
+	"Objets": {
+		"Sphere":[
+			{
+				"name":"Planet",
+				"position":{
+					"x":0,
+					"y":0,
+					"z":-6371000
+				},
+				"radius":6371000,
+				"immaterial":true, 
+				"source_of_gravity":true
+			}, 
+			{
+				"name":"Zone 1",
+				"position":{
+					"x":75,
+					"y":25,
+					"z":0
+				},
+				"radius":10,
+				"immaterial":true, 
+			}
+		]
+	},
+	"Projectiles":{
+		"Bullet":[
+			{
+				"name":"Bullet 1",
+				"position":{
+					"x":0,
+					"y":25,
+					"z":10
+				},
+				"velocity":{
+					"x":0,
+					"y":0,
+					"z":0
+				}, 
+				"affected_by_gravity":true, 
+				"destroyed_on_contact":false
+			},
+			{
+				"name":"Bullet 2",
+				"position":{
+					"x":0,
+					"y":25,
+					"z":50
+				},
+				"velocity":{
+					"x":2,
+					"y":0,
+					"z":0
+				}, 
+				"affected_by_gravity":true,
+				"destroyed_on_contact":false
+			}
+		]
+	}
+}
