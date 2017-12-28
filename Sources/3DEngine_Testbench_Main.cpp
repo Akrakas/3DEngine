@@ -27,11 +27,13 @@ bool IsCloseTo(vec3f point1, vec3f point2) {
 }
 
 void engine_show(Engine* physic_engine, cv::Mat* image, double dx, double dy) {
-	for (list<Object_Sphere*>::iterator it_object=physic_engine->objets_list.begin(); it_object != physic_engine->objets_list.end(); ++it_object) {
-		Object_Sphere* current_sphere = (*it_object);
-		double zpos = min(max((current_sphere->englobing_sphere.position.z+127)/255.0, 0.0), 1.0);
-		cv::circle(*image, cv::Point(current_sphere->englobing_sphere.position.x*dx, current_sphere->englobing_sphere.position.y*dy), current_sphere->englobing_sphere.radius*dx, cv::Scalar( 0*zpos, 127*zpos, 0*zpos ), 3, 8 );
-		cv::line( *image, cv::Point(current_sphere->englobing_sphere.position.x*dx,current_sphere->englobing_sphere.position.y*dy), cv::Point((current_sphere->englobing_sphere.position.x+current_sphere->englobing_sphere.velocity.x)*dx,(current_sphere->englobing_sphere.position.y+current_sphere->englobing_sphere.velocity.y)*dy), cv::Scalar( 127*zpos, 127*zpos, 127*zpos ), 3, 8 );
+	for (list<Object_virtual*>::iterator it_object=physic_engine->objets_list.begin(); it_object != physic_engine->objets_list.end(); ++it_object) {
+		if(((*it_object))->objectType == objSphere) {
+			Object_Sphere* current_sphere = (Object_Sphere*)(*it_object);
+			double zpos = min(max((current_sphere->englobing_sphere.position.z+127)/255.0, 0.0), 1.0);
+			cv::circle(*image, cv::Point(current_sphere->englobing_sphere.position.x*dx, current_sphere->englobing_sphere.position.y*dy), current_sphere->englobing_sphere.radius*dx, cv::Scalar( 0*zpos, 127*zpos, 0*zpos ), 3, 8 );
+			cv::line( *image, cv::Point(current_sphere->englobing_sphere.position.x*dx,current_sphere->englobing_sphere.position.y*dy), cv::Point((current_sphere->englobing_sphere.position.x+current_sphere->englobing_sphere.velocity.x)*dx,(current_sphere->englobing_sphere.position.y+current_sphere->englobing_sphere.velocity.y)*dy), cv::Scalar( 127*zpos, 127*zpos, 127*zpos ), 3, 8 );
+		}
 	}
 	for (list<Projectile_Bullet*>::iterator it_projectile=physic_engine->projectiles_list.begin(); it_projectile != physic_engine->projectiles_list.end(); ++it_projectile) {
 		Projectile_Bullet* current_Projectile = (*it_projectile);
@@ -41,12 +43,7 @@ void engine_show(Engine* physic_engine, cv::Mat* image, double dx, double dy) {
 	}
 }
 
-int main() {
-	
-	vec3f point_test_closest = ClosestPointOnLine(vec3f(1, 0, 0), vec3f(1, 1, 0), vec3f(0, 0, 0));
-	if(IsCloseTo(point_test_closest, vec3f(0.5, -0.5, 0))) cout << "Test point_test_closest = SUCCESS" << endl;
-	else cout << "Test point_test_closest = FAILED" << endl;
-	
+int main() {	
 	cv::namedWindow("TestBench", 1);
 	cv::setMouseCallback("TestBench", CallBackFunc, NULL);
 	double dx = (double)IMG_X/ENV_X;
@@ -55,11 +52,11 @@ int main() {
 	Engine physic_engine("../Config/config.json");
 	while(1) {
 		cv::Mat testbench_img = cv::Mat::zeros( ENV_X*dx, ENV_Y*dy, CV_8UC3 );
-		physic_engine.step_withlist(0.5);
+		physic_engine.step_withlist(0.2);
 		cout << "elapsed_time = " << physic_engine.elapsed_time << endl;
 		engine_show(&physic_engine, &testbench_img, dx, dy);
 		cv::imshow("TestBench", testbench_img);
-		cv::waitKey(100);
+		cv::waitKey(200);
 	}
 	
 	return 0;

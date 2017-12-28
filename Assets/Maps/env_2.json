@@ -1,28 +1,24 @@
 {
 	"Objets": {
-		"Sphere":[
+		"Plane":[
 			{
-				"name":"Planet",
+				"name":"Plan 1",
 				"position":{
 					"x":0,
 					"y":0,
-					"z":-6371000
-				},
-				"radius":6371000,
-				"immaterial":false, 
-				"source_of_gravity":true,
-				"destroyable":false
-			}, 
-			{
-				"name":"Zone 1",
-				"position":{
-					"x":75,
-					"y":25,
 					"z":0
 				},
-				"radius":10,
-				"immaterial":true,
-				"destroyable":false
+				"velocity":{
+					"x":0,
+					"y":0,
+					"z":0
+				},
+				"normale":{
+					"x":0,
+					"y":0,
+					"z":1
+				},
+				"immaterial":false
 			}
 		]
 	},
@@ -31,31 +27,31 @@
 			{
 				"name":"Bullet 1",
 				"position":{
-					"x":0,
+					"x":25,
 					"y":25,
 					"z":10
 				},
 				"velocity":{
-					"x":10,
+					"x":0,
 					"y":0,
-					"z":0
+					"z":-5
 				}, 
-				"affected_by_gravity":true, 
+				"affected_by_gravity":false, 
 				"destroyed_on_contact":false
 			},
 			{
 				"name":"Bullet 2",
 				"position":{
-					"x":0,
+					"x":75,
 					"y":25,
 					"z":50
 				},
 				"velocity":{
-					"x":2,
+					"x":0,
 					"y":0,
 					"z":0
 				}, 
-				"affected_by_gravity":true,
+				"affected_by_gravity":false,
 				"destroyed_on_contact":false
 			}
 		]

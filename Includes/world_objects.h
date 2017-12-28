@@ -10,7 +10,7 @@
 
 using namespace std;
 
-enum object_type_enum { objNA=0, objPoint, objSphere };
+enum object_type_enum { objNA=0, objPoint, objSphere, objPlane, objPolygon, objPolyhedron};
 enum projectile_type_enum { projNA=0, projBullet};
 
 class Object_virtual {
@@ -29,6 +29,30 @@ public:
 	
 	Object_Sphere();
 	Object_Sphere(vec3f _position, vec3f _velocity, double radius, string _name);
+};
+
+class Object_Plane : public Object_virtual{
+public:
+	Shape_Plane plane;
+	
+	Object_Plane();
+	Object_Plane(vec3f _position, vec3f _velocity, vec3f _normale, string _name);
+};
+
+class Object_Polygon : public Object_virtual{
+public:
+	Shape_Polygon polygon;
+	
+	Object_Polygon();
+	Object_Polygon(vec3f _position, vec3f _velocity, vec3f _normale, string _name);
+};
+
+class Object_Polyhedron : public Object_virtual{
+public:
+	list<Shape_Polygon*> polygons;
+	
+	Object_Polyhedron();
+	Object_Polyhedron(vec3f _position, vec3f _velocity, string _name);
 };
 
 class Projectile_virtual {

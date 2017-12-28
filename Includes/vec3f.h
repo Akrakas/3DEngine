@@ -127,11 +127,11 @@ public:
 		return (x * x + y * y + z * z);
 	}
 
-// 	void truncate(double length) {
-// 		double angle = atan2f(y, x);
-// 		x = length * cos(angle);
-// 		y = length * sin(angle);
-// 	}
+	vec3f truncate(double length) {
+		vec3f normal = this->normal();
+		normal *= length;
+		return normal;
+	}
 
 //	vec3f ortho() const {
 //		return vec3f(y, -x);

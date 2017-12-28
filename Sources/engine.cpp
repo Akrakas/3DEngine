@@ -32,12 +32,6 @@ Event_Collision::Event_Collision() {
 	eventType = eventCollision;
 }
 
-Event_Collision::Event_Collision(int _index_projectile, int _index_object) {
-	eventType = eventCollision;
-	index_projectile = _index_projectile;
-	index_object = _index_object;
-}
-
 Event_Discret_Update::Event_Discret_Update() {
 	eventType = eventDiscretUpdate;
 }
@@ -69,8 +63,13 @@ void Engine::step_withlist(double timestep) {
 		
 		double max_timestep = min(timestep, event->time_of_event - elapsed_time);
 				
-		for (list<Object_Sphere*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
-			(*it_object)->englobing_sphere.position =  (*it_object)->englobing_sphere.position + ((*it_object)->englobing_sphere.velocity * max_timestep);
+		for (list<Object_virtual*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
+			if((*(it_object))->objectType == objSphere) {
+				(*it_object)->englobing_sphere.position =  (*it_object)->englobing_sphere.position + ((*it_object)->englobing_sphere.velocity * max_timestep);
+			} else if((*(it_object))->objectType == objPlane) {
+				Object_Plane* Plane = (Object_Plane*)(*it_object);
+				Plane->plane.position =  Plane->plane.position + (Plane->plane.velocity * max_timestep);
+			}
 		}
 		
 		for (list<Projectile_Bullet*>::iterator it_projectile=projectiles_list.begin(); it_projectile != projectiles_list.end(); ++it_projectile) {
@@ -84,10 +83,10 @@ void Engine::step_withlist(double timestep) {
 			if(event->eventType == eventCollision) {
 				Event_Collision* collision = (Event_Collision*)event;
 				if(collision->affected_object->immaterial != true || collision->affected_projectile->is_destroyed_on_contact == true) {
-					cout << "Le projectile \"" << collision->affected_projectile->name << "\" impacte la sphere \"" << collision->affected_object->name << "\" à T=" << elapsed_time << endl;
+					cout << "Le projectile \"" << collision->affected_projectile->name << "\" impacte l'objet \"" << collision->affected_object->name << "\" à T=" << elapsed_time << endl;
 					erase_projectile_withlist(collision->affected_projectile);
 				} else {
-					cout << "Le projectile \"" << collision->affected_projectile->name << "\" traverse la sphere \"" << collision->affected_object->name << "\" à T=" << elapsed_time << endl;
+					cout << "Le projectile \"" << collision->affected_projectile->name << "\" traverse l'objet \"" << collision->affected_object->name << "\" à T=" << elapsed_time << endl;
 					update_collision_projectile_withlist(collision->affected_projectile, event);
 				}
 			} else if(event->eventType == eventDiscretUpdate) {
@@ -148,7 +147,7 @@ bool Engine::get_earliest_event_withlist(Event_virtual** event) {
 }
 
 Object_Sphere* Engine::create_sphere_withlist(vec3f position, vec3f velocity, double radius, string name, string aipath_filename, bool immaterial) {
-	if(objets_list.size() < MAX_SPHERES) {
+	if(objets_list.size() < MAX_OBJECTS) {
 		Object_Sphere* new_sphere_ptr = new Object_Sphere(position, velocity, radius, name);
 		objets_list.insert(objets_list.begin(), new_sphere_ptr);
 		update_collision_sphere_withlist(new_sphere_ptr);
@@ -158,6 +157,22 @@ Object_Sphere* Engine::create_sphere_withlist(vec3f position, vec3f velocity, do
 		new_sphere_ptr->immaterial = immaterial;
 		cout << "Creation de l'objet \"" << new_sphere_ptr->name << "\" à T=" << elapsed_time << endl;
 		return new_sphere_ptr;
+	} else {
+		return NULL;
+	}
+}
+
+Object_Plane* Engine::create_plane_withlist(vec3f position, vec3f velocity, vec3f normale, string name, string aipath_filename, bool immaterial) {
+	if(objets_list.size() < MAX_OBJECTS) {
+		Object_Plane* new_plane_ptr = new Object_Plane(position, velocity, normale, name);
+		objets_list.insert(objets_list.begin(), new_plane_ptr);
+		update_collision_plane_withlist(new_plane_ptr);
+		if(aipath_filename.size() != 0) {
+			load_aipath_from_json(new_plane_ptr, aipath_filename);
+		}
+		new_plane_ptr->immaterial = immaterial;
+		cout << "Creation de l'objet \"" << new_plane_ptr->name << "\" à T=" << elapsed_time << endl;
+		return new_plane_ptr;
 	} else {
 		return NULL;
 	}
@@ -225,13 +240,40 @@ void Engine::update_collision_sphere_withlist(Object_Sphere* affected_object) {
 	}
 }
 
+void Engine::update_collision_plane_withlist(Object_Plane* affected_object) {
+	for (list<Event_virtual*>::iterator it_event=evenements_list.begin(); it_event != evenements_list.end(); ++it_event) {
+		if((*it_event)->eventType == eventCollision) {
+			Event_Collision* collision = (Event_Collision*)(*it_event);
+			if(collision->affected_object == affected_object) { //Le projectile rentrait en collision avec l'objet modifié, on lui fait tout verifier
+				update_collision_projectile_withlist(collision->affected_projectile, (*it_event));
+			} else { //Le projectile ne rentrait pas en collision avec l'objet modifié, on verifie si c'est le cas maintenant
+				double time_before_collision;
+				if(LineContinuousCollisionPlane(&(collision->affected_projectile->Point), &(affected_object->plane), &time_before_collision)) {
+					if(elapsed_time + time_before_collision < collision->time_of_event) {
+						collision->affected_object = affected_object;
+						collision->time_of_event = elapsed_time + time_before_collision;
+					}
+				}
+			}
+		}
+	}
+}
+
 void Engine::create_collision_projectile_withlist(Projectile_Bullet* affected_projectile) {	
 	Event_Collision* new_event = new Event_Collision();
 	new_event->affected_projectile = affected_projectile;
-	for (list<Object_Sphere*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
+	for (list<Object_virtual*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
 		double time_before_collision;
-		if(LineContinuousCollisionSphere(&(affected_projectile->Point), &((*(it_object))->englobing_sphere), &time_before_collision)) {
-			if((*(it_object))->objectType == objSphere) {
+		if((*(it_object))->objectType == objSphere) {
+			if(LineContinuousCollisionSphere(&(affected_projectile->Point), &((*(it_object))->englobing_sphere), &time_before_collision)) {
+				if(elapsed_time + time_before_collision < new_event->time_of_event) {
+					new_event->affected_object = (*it_object);
+					new_event->time_of_event = elapsed_time + time_before_collision;
+				}
+			}
+		} else if((*(it_object))->objectType == objPlane) {
+			Object_Plane* Plane = (Object_Plane*)(*it_object);
+			if(LineContinuousCollisionPlane(&(affected_projectile->Point), &(Plane->plane), &time_before_collision)) {
 				if(elapsed_time + time_before_collision < new_event->time_of_event) {
 					new_event->affected_object = (*it_object);
 					new_event->time_of_event = elapsed_time + time_before_collision;
@@ -245,10 +287,18 @@ void Engine::create_collision_projectile_withlist(Projectile_Bullet* affected_pr
 void Engine::update_collision_projectile_withlist(Projectile_Bullet* affected_projectile, Event_virtual* event) {
 	Event_Collision* collision = (Event_Collision*)event;
 	collision->time_of_event = std::numeric_limits<double>::max();
-	for (list<Object_Sphere*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
+	for (list<Object_virtual*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
 		double time_before_collision;
-		if(LineContinuousCollisionSphere(&(affected_projectile->Point), &((*(it_object))->englobing_sphere), &time_before_collision)) {
-			if((*(it_object))->objectType == objSphere) {
+		if((*(it_object))->objectType == objSphere) {
+			if(LineContinuousCollisionSphere(&(affected_projectile->Point), &((*(it_object))->englobing_sphere), &time_before_collision)) {
+				if(elapsed_time + time_before_collision < collision->time_of_event) {
+					collision->affected_object = (*it_object);
+					collision->time_of_event = elapsed_time + time_before_collision;
+				}
+			}
+		} else if((*(it_object))->objectType == objPlane) {
+			Object_Plane* Plane = (Object_Plane*)(*it_object);
+			if(LineContinuousCollisionPlane(&(affected_projectile->Point), &(Plane->plane), &time_before_collision)) {
 				if(elapsed_time + time_before_collision < collision->time_of_event) {
 					collision->affected_object = (*it_object);
 					collision->time_of_event = elapsed_time + time_before_collision;
@@ -324,6 +374,56 @@ void Engine::load_world_from_json(string filename) {
 							optim_gravity_source = position;
 						}
 						create_sphere_withlist(position, velocity, radius, name, aipath_filename, immaterial);
+					}
+				} else if(it_objetstype.key() == "Plane") {
+					for (json::iterator it_plan = it_objetstype.value().begin(); it_plan != it_objetstype.value().end(); ++it_plan) {
+						vec3f position(0,0,0);
+						vec3f velocity(0,0,0);
+						vec3f normale(0,0,0);
+						string name = "Unnamed";
+						bool is_source_of_gravity = false;
+						bool immaterial = false;
+						string aipath_filename = "";
+						for (json::iterator it_components = it_plan.value().begin(); it_components != it_plan.value().end(); ++it_components) {
+							if(it_components.key() == "position") {
+								for (json::iterator it_position = it_components.value().begin(); it_position != it_components.value().end(); ++it_position) {
+									if(it_position.key() == "x") {
+										position.x = double(it_position.value());
+									} else if(it_position.key() == "y") {
+										position.y = double(it_position.value());
+									} else if(it_position.key() == "z") {
+										position.z = double(it_position.value());
+									}
+								}
+							} else if(it_components.key() == "velocity") {
+								for (json::iterator it_velocity = it_components.value().begin(); it_velocity != it_components.value().end(); ++it_velocity) {
+									if(it_velocity.key() == "x") {
+										velocity.x = double(it_velocity.value());
+									} else if(it_velocity.key() == "y") {
+										velocity.y = double(it_velocity.value());
+									} else if(it_velocity.key() == "z") {
+										velocity.z = double(it_velocity.value());
+									}
+								}
+							} else if(it_components.key() == "normale") {
+								for (json::iterator it_position = it_components.value().begin(); it_position != it_components.value().end(); ++it_position) {
+									if(it_position.key() == "x") {
+										normale.x = double(it_position.value());
+									} else if(it_position.key() == "y") {
+										normale.y = double(it_position.value());
+									} else if(it_position.key() == "z") {
+										normale.z = double(it_position.value());
+									}
+								}
+							} else if(it_components.key() == "name") {
+								name = it_components.value();
+							} else if(it_components.key() == "filepath") { 
+								aipath_filename = it_components.value();
+							} else if(it_components.key() == "immaterial") {
+								immaterial = it_components.value();
+							}
+						}
+						create_plane_withlist(position, velocity, normale.normal(), name, aipath_filename, immaterial);
 					}
 				}
 			}
@@ -417,7 +517,7 @@ void Engine::load_config_from_json(string config_filename) {
 	}
 }
 
-void Engine::load_aipath_from_json(Object_Sphere* affected_object, string aipath_filename) {
+void Engine::load_aipath_from_json(Object_virtual* affected_object, string aipath_filename) {
 	using nlohmann::json;
 	
 	std::ifstream ifs(aipath_filename);

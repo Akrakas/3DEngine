@@ -4,7 +4,6 @@ Shape_virtual::Shape_virtual(){
 	shapeType = shapeNA;
 	position.set(0,0,0);
 	velocity.set(0,0,0);
-	collided_shape = NULL;
 }
 
 Shape_Point::Shape_Point(){
@@ -33,4 +32,35 @@ Shape_Sphere::Shape_Sphere(vec3f _position, vec3f _velocity, double _radius){
 	velocity = _velocity;
 }
 
+Shape_Plane::Shape_Plane(){
+	shapeType = shapePlan;
+	position = vec3f(0,0,0);
+	velocity = vec3f(0,0,0);
+	normale = vec3f(0,0,0);
+}
 
+Shape_Plane::Shape_Plane(vec3f _position, vec3f _velocity, vec3f _normale){
+	shapeType = shapePlan;
+	position = _position;
+	velocity = _velocity;
+	normale = _normale;
+}
+
+Shape_Polygon::Shape_Polygon(){
+	shapeType = shapePolygon;
+	position = vec3f(0,0,0);
+	velocity = vec3f(0,0,0);
+	normale = vec3f(0,0,0);
+}
+
+Shape_Polygon::Shape_Polygon(vec3f _position, vec3f _velocity, vec3f _normale){
+	shapeType = shapePolygon;
+	position = _position;
+	velocity = _velocity;
+	normale = _normale;
+}
+
+void Shape_Polygon::add_side(vec3f offset) {
+	Shape_Plane* plan = new Shape_Plane(position + offset, velocity, offset.normal());
+	sides.insert(sides.begin(), plan);
+}
