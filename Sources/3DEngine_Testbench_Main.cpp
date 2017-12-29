@@ -35,11 +35,18 @@ void engine_show(Engine* physic_engine, cv::Mat* image, double dx, double dy) {
 			cv::line( *image, cv::Point(current_sphere->englobing_sphere.position.x*dx,current_sphere->englobing_sphere.position.y*dy), cv::Point((current_sphere->englobing_sphere.position.x+current_sphere->englobing_sphere.velocity.x)*dx,(current_sphere->englobing_sphere.position.y+current_sphere->englobing_sphere.velocity.y)*dy), cv::Scalar( 127*zpos, 127*zpos, 127*zpos ), 3, 8 );
 		}
 	}
-	for (list<Projectile_Bullet*>::iterator it_projectile=physic_engine->projectiles_list.begin(); it_projectile != physic_engine->projectiles_list.end(); ++it_projectile) {
-		Projectile_Bullet* current_Projectile = (*it_projectile);
-		double zpos = min(max((current_Projectile->Point.position.z+127)/255.0, 0.0), 1.0);
-		cv::circle(*image, cv::Point(current_Projectile->Point.position.x*dx, current_Projectile->Point.position.y*dy), 1, cv::Scalar( 0*zpos, 127*zpos, 0*zpos ), 3, 8 );
-		cv::line( *image, cv::Point(current_Projectile->Point.position.x*dx,current_Projectile->Point.position.y*dy), cv::Point((current_Projectile->Point.position.x+current_Projectile->Point.velocity.x)*dx,(current_Projectile->Point.position.y+current_Projectile->Point.velocity.y)*dy), cv::Scalar( 127*zpos, 127*zpos, 127*zpos ), 3, 8 );
+	for (list<Projectile_virtual*>::iterator it_projectile=physic_engine->projectiles_list.begin(); it_projectile != physic_engine->projectiles_list.end(); ++it_projectile) {
+		if(((*it_projectile))->projectileType == projBullet) {
+			Projectile_Bullet* current_Projectile = (Projectile_Bullet*)(*it_projectile);
+			double zpos = min(max((current_Projectile->Point.position.z+127)/255.0, 0.0), 1.0);
+			cv::circle(*image, cv::Point(current_Projectile->Point.position.x*dx, current_Projectile->Point.position.y*dy), 1, cv::Scalar( 0*zpos, 127*zpos, 0*zpos ), 3, 8 );
+			cv::line( *image, cv::Point(current_Projectile->Point.position.x*dx,current_Projectile->Point.position.y*dy), cv::Point((current_Projectile->Point.position.x+current_Projectile->Point.velocity.x)*dx,(current_Projectile->Point.position.y+current_Projectile->Point.velocity.y)*dy), cv::Scalar( 127*zpos, 127*zpos, 127*zpos ), 3, 8 );
+		} else if(((*it_projectile))->projectileType == projMissile) {
+			Projectile_Missile* current_Missile = (Projectile_Missile*)(*it_projectile);
+			double zpos = min(max((current_Missile->Point.position.z+127)/255.0, 0.0), 1.0);
+			cv::circle(*image, cv::Point(current_Missile->Point.position.x*dx, current_Missile->Point.position.y*dy), 1, cv::Scalar( 0*zpos, 127*zpos, 0*zpos ), 3, 8 );
+			cv::line( *image, cv::Point(current_Missile->Point.position.x*dx,current_Missile->Point.position.y*dy), cv::Point((current_Missile->Point.position.x+current_Missile->Point.velocity.x)*dx,(current_Missile->Point.position.y+current_Missile->Point.velocity.y)*dy), cv::Scalar( 127*zpos, 127*zpos, 127*zpos ), 3, 8 );
+		}
 	}
 }
 

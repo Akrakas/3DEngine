@@ -32,7 +32,7 @@ public:
 	vec3f operator-(vec3f& v) {
 		return vec3f(x - v.x, y - v.y, z - v.z);
 	}
-
+	
 	vec3f& operator+=(vec3f& v) {
 		x += v.x;
 		y += v.y;

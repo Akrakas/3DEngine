@@ -72,7 +72,7 @@ void Engine::step_withlist(double timestep) {
 			}
 		}
 		
-		for (list<Projectile_Bullet*>::iterator it_projectile=projectiles_list.begin(); it_projectile != projectiles_list.end(); ++it_projectile) {
+		for (list<Projectile_virtual*>::iterator it_projectile=projectiles_list.begin(); it_projectile != projectiles_list.end(); ++it_projectile) {
 			(*it_projectile)->Point.position =  (*it_projectile)->Point.position + ((*it_projectile)->Point.velocity * max_timestep);
 		}
 
@@ -107,6 +107,29 @@ void Engine::step_withlist(double timestep) {
 							collision->affected_projectile->Point.velocity.z -= 0.5*gravity_cst*collision->affected_projectile->granularity_debt;
 							
 							//Recalcul des collisions
+							update_collision_projectile_withlist(collision->affected_projectile, collision);
+						}
+						if(collision->affected_projectile->projectileType == projMissile) {
+							projectile_needing_granularity_counter++;
+							Projectile_Missile* missile = (Projectile_Missile*)collision->affected_projectile;
+							if(missile->target == NULL) {
+								cout << "Missile \"" << missile->name << "\" : NO TARGET" << endl;
+								//self destruct or something
+							} else {
+								cout << "Missile \"" << missile->name << "\" : TARGET AQUIRED" << endl;
+								vec3f vector_to_target_normale = (*(missile->target_position) - missile->Point.position).normal();
+								cout << "CIBLE : ";
+								(*(missile->target_position) - missile->Point.position).print();
+								//if(vector_to_target_normale.dot(missile->Point.velocity) > 0) vector_to_target_normale = vec3f(0,0,0)-vector_to_target_normale;
+								vec3f part2 = (vector_to_target_normale * (missile->Point.velocity.dot(vector_to_target_normale)))*2.0;
+								vec3f part3 = (missile->Point.velocity - part2);
+								vec3f reflection = (vec3f(0,0,0)-part3);
+								cout << "COMPENSATION : ";
+								reflection.print();
+								missile->Point.velocity += reflection;
+								vec3f part4 = (vector_to_target_normale * ((missile->power*update->update_delay) - reflection.length()));
+								missile->Point.velocity += part4;
+							}
 							update_collision_projectile_withlist(collision->affected_projectile, collision);
 						}
 					}
@@ -178,26 +201,49 @@ Object_Plane* Engine::create_plane_withlist(vec3f position, vec3f velocity, vec3
 	}
 }
 
-Projectile_Bullet* Engine::create_projectile_withlist(vec3f position, vec3f velocity, string name, bool is_affected_by_gravity, bool is_destroyed_on_contact) {
+Projectile_Bullet* Engine::create_bullet_withlist(vec3f position, vec3f velocity, string name, bool is_affected_by_gravity, bool is_destroyed_on_contact) {
 	if(projectiles_list.size() < MAX_PROJECTILES) {
-		Projectile_Bullet* new_projectile_ptr = new Projectile_Bullet(position, velocity, name, is_affected_by_gravity);
+		Projectile_Bullet* new_bullet_ptr = new Projectile_Bullet(position, velocity, name, is_affected_by_gravity);
 		if(is_affected_by_gravity) {
 			for (list<Event_virtual*>::iterator it_event=evenements_list.begin(); it_event != evenements_list.end(); ++it_event) {
 				if((*it_event)->eventType == eventDiscretUpdate) {
 					if((*it_event)->time_of_event == std::numeric_limits<double>::max()) {
 						(*it_event)->time_of_event = elapsed_time;
 					}
-					new_projectile_ptr->granularity_debt = (*it_event)->time_of_event - elapsed_time;
-					new_projectile_ptr->Point.velocity.z -= 0.5*gravity_cst*(new_projectile_ptr->granularity_debt);
+					new_bullet_ptr->granularity_debt = (*it_event)->time_of_event - elapsed_time;
+					new_bullet_ptr->Point.velocity.z -= 0.5*gravity_cst*(new_bullet_ptr->granularity_debt);
 					break;
 				}
 			}
 		}
-		new_projectile_ptr->is_destroyed_on_contact = is_destroyed_on_contact;
-		projectiles_list.insert(projectiles_list.begin(), new_projectile_ptr);
-		create_collision_projectile_withlist(new_projectile_ptr);
-		cout << "Creation du projectile = \"" << new_projectile_ptr->name << "\" à T=" << elapsed_time << endl;
-		return new_projectile_ptr;
+		new_bullet_ptr->is_destroyed_on_contact = is_destroyed_on_contact;
+		projectiles_list.insert(projectiles_list.begin(), new_bullet_ptr);
+		create_collision_projectile_withlist(new_bullet_ptr);
+		cout << "Creation du bullet = \"" << new_bullet_ptr->name << "\" à T=" << elapsed_time << endl;
+		return new_bullet_ptr;
+	} else {
+		return NULL;
+	}
+}
+
+Projectile_Missile* Engine::create_missile_withlist(vec3f position, vec3f velocity, Object_virtual* target, double power, string name, bool is_affected_by_gravity, bool is_destroyed_on_contact) {
+	if(projectiles_list.size() < MAX_PROJECTILES) {
+		Projectile_Missile* new_missile_ptr = new Projectile_Missile(position, velocity, target, power, name, is_affected_by_gravity);
+		for (list<Event_virtual*>::iterator it_event=evenements_list.begin(); it_event != evenements_list.end(); ++it_event) {
+			if((*it_event)->eventType == eventDiscretUpdate) {
+				if((*it_event)->time_of_event == std::numeric_limits<double>::max()) {
+					(*it_event)->time_of_event = elapsed_time;
+				}
+				new_missile_ptr->granularity_debt = (*it_event)->time_of_event - elapsed_time;
+				new_missile_ptr->Point.velocity.z -= 0.5*gravity_cst*(new_missile_ptr->granularity_debt);
+				break;
+			}
+		}
+		new_missile_ptr->is_destroyed_on_contact = is_destroyed_on_contact;
+		projectiles_list.insert(projectiles_list.begin(), new_missile_ptr);
+		create_collision_projectile_withlist(new_missile_ptr);
+		cout << "Creation du missile = \"" << new_missile_ptr->name << "\" à T=" << elapsed_time << endl;
+		return new_missile_ptr;
 	} else {
 		return NULL;
 	}
@@ -207,7 +253,7 @@ bool Engine::erase_evenement_withlist(Event_virtual* event) {
 	evenements_list.remove(event);
 }
 
-bool Engine::erase_projectile_withlist(Projectile_Bullet* affected_projectile) {
+bool Engine::erase_projectile_withlist(Projectile_virtual* affected_projectile) {
 	for (list<Event_virtual*>::iterator it_event=evenements_list.begin(); it_event != evenements_list.end(); ++it_event) {
 		if((*it_event)->eventType == eventCollision) {
 			Event_Collision* collision = (Event_Collision*)(*it_event);
@@ -259,7 +305,7 @@ void Engine::update_collision_plane_withlist(Object_Plane* affected_object) {
 	}
 }
 
-void Engine::create_collision_projectile_withlist(Projectile_Bullet* affected_projectile) {	
+void Engine::create_collision_projectile_withlist(Projectile_virtual* affected_projectile) {	
 	Event_Collision* new_event = new Event_Collision();
 	new_event->affected_projectile = affected_projectile;
 	for (list<Object_virtual*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
@@ -284,7 +330,7 @@ void Engine::create_collision_projectile_withlist(Projectile_Bullet* affected_pr
 	evenements_list.insert(evenements_list.begin(), new_event);
 }
 
-void Engine::update_collision_projectile_withlist(Projectile_Bullet* affected_projectile, Event_virtual* event) {
+void Engine::update_collision_projectile_withlist(Projectile_virtual* affected_projectile, Event_virtual* event) {
 	Event_Collision* collision = (Event_Collision*)event;
 	collision->time_of_event = std::numeric_limits<double>::max();
 	for (list<Object_virtual*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
@@ -304,6 +350,16 @@ void Engine::update_collision_projectile_withlist(Projectile_Bullet* affected_pr
 					collision->time_of_event = elapsed_time + time_before_collision;
 				}
 			}
+		}
+	}
+}
+
+bool Engine::get_object_with_name(Object_virtual** concerned_object, string name) {
+	*concerned_object = NULL;
+	for (list<Object_virtual*>::iterator it_object=objets_list.begin(); it_object != objets_list.end(); ++it_object) {
+		if((*it_object)->name == name) {
+			*concerned_object = (*it_object);
+			return true;
 		}
 	}
 }
@@ -465,7 +521,51 @@ void Engine::load_world_from_json(string filename) {
 								is_destroyed_on_contact = it_components.value();
 							}
 						}
-						create_projectile_withlist(position, velocity, name, is_affected_by_gravity, is_destroyed_on_contact);
+						create_bullet_withlist(position, velocity, name, is_affected_by_gravity, is_destroyed_on_contact);
+					}
+				} else if(it_projectiles.key() == "Missile") {
+					for (json::iterator it_missile = it_projectiles.value().begin(); it_missile != it_projectiles.value().end(); ++it_missile) {
+						vec3f position(0,0,0);
+						vec3f velocity(0,0,0);
+						string name = "Unnamed";
+						bool is_affected_by_gravity = false;
+						bool is_destroyed_on_contact = false;
+						Object_virtual* target = NULL;
+						double power = 0;
+						for (json::iterator it_components = it_missile.value().begin(); it_components != it_missile.value().end(); ++it_components) {
+							if(it_components.key() == "position") {
+								for (json::iterator it_position = it_components.value().begin(); it_position != it_components.value().end(); ++it_position) {
+									if(it_position.key() == "x") {
+										position.x = double(it_position.value());
+									} else if(it_position.key() == "y") {
+										position.y = double(it_position.value());
+									} else if(it_position.key() == "z") {
+										position.z = double(it_position.value());
+									}
+								}
+							} else if(it_components.key() == "velocity") {
+								for (json::iterator it_velocity = it_components.value().begin(); it_velocity != it_components.value().end(); ++it_velocity) {
+									if(it_velocity.key() == "x") {
+										velocity.x = double(it_velocity.value());
+									} else if(it_velocity.key() == "y") {
+										velocity.y = double(it_velocity.value());
+									} else if(it_velocity.key() == "z") {
+										velocity.z = double(it_velocity.value());
+									}
+								}
+							} else if(it_components.key() == "name") {
+								name = it_components.value();
+							} else if(it_components.key() == "affected_by_gravity") {
+								is_affected_by_gravity = it_components.value();
+							} else if(it_components.key() == "destroyed_on_contact") {
+								is_destroyed_on_contact = it_components.value();
+							} else if(it_components.key() == "target") {
+								get_object_with_name(&target, it_components.value());
+							} else if(it_components.key() == "power") {
+								power = double(it_components.value());
+							}
+						}
+						create_missile_withlist(position, velocity, target, power, name, is_affected_by_gravity, is_destroyed_on_contact);
 					}
 				}
 			}

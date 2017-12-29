@@ -1,0 +1,63 @@
+{
+	"Objets": {
+		"Plane":[
+			{
+				"name":"Plan 1",
+				"position":{
+					"x":0,
+					"y":0,
+					"z":0
+				},
+				"velocity":{
+					"x":0,
+					"y":0,
+					"z":0
+				},
+				"normale":{
+					"x":0,
+					"y":0,
+					"z":1
+				},
+				"immaterial":false
+			}
+		],
+		"Sphere":[
+			{
+				"name":"Sphere 1",
+				"position":{
+					"x":1000,
+					"y":50,
+					"z":0
+				},
+				"velocity":{
+					"x":0,
+					"y":0,
+					"z":0
+				},
+				"radius":10,
+				"immaterial":false
+			}
+		]
+	},
+	"Projectiles":{
+		"Missile":[
+			{
+				"name":"Missile 1",
+				"position":{
+					"x":25,
+					"y":25,
+					"z":50
+				},
+				"velocity":{
+					"x":0,
+					"y":0,
+					"z":0
+				}, 
+				"target":"Sphere 1",
+				"power":15,
+				"affected_by_gravity":true, 
+				"destroyed_on_contact":false
+			}
+		]
+	}
+}

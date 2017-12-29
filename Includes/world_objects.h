@@ -11,7 +11,7 @@
 using namespace std;
 
 enum object_type_enum { objNA=0, objPoint, objSphere, objPlane, objPolygon, objPolyhedron};
-enum projectile_type_enum { projNA=0, projBullet};
+enum projectile_type_enum { projNA=0, projBullet, projMissile};
 
 class Object_virtual {
 public:
@@ -60,10 +60,10 @@ public:
 	string name;
 	projectile_type_enum projectileType;
 	Shape_Point Point;
-	double time_before_collision;
 	double granularity_debt;
 	bool is_affected_by_gravity;
 	bool is_destroyed_on_contact;
+	
 	Projectile_virtual();
 };
 
@@ -72,6 +72,19 @@ public:
 	
 	Projectile_Bullet();
 	Projectile_Bullet(vec3f _position, vec3f _velocity, string _name, bool _is_affected_by_gravity);
+};
+
+class Projectile_Missile : public Projectile_virtual{
+public:
+	double power;
+	Object_virtual* target;
+	vec3f* target_position;
+	vec3f* target_velocity;
+
+	
+	Projectile_Missile();
+	Projectile_Missile(vec3f _position, vec3f _velocity, Object_virtual* _target, double _power, string _name, bool _is_affected_by_gravity);
+	void Bind_target();
 };
 
 #endif

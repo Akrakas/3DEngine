@@ -1,6 +1,6 @@
 {
 	"Discrete_update_delay":1.5,
-	"world_file":"../Assets/Maps/env_2.json",
+	"world_file":"../Assets/Maps/env_3.json",
 	"gravity":true,
 	"gravity_cst":9.81
 }

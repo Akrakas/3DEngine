@@ -52,7 +52,6 @@ Projectile_virtual::Projectile_virtual(){
 	name = "Unnamed";
 	projectileType = projNA;
 	Point = Shape_Point(vec3f(0,0,0), vec3f(0,0,0));
-	time_before_collision = std::numeric_limits<double>::max();
 }
 
 Projectile_Bullet::Projectile_Bullet() {
@@ -64,4 +63,34 @@ Projectile_Bullet::Projectile_Bullet(vec3f _position, vec3f _velocity, string _n
 	projectileType = projBullet;
 	Point = Shape_Point(_position, _velocity);
 	is_affected_by_gravity = _is_affected_by_gravity;
+}
+
+Projectile_Missile::Projectile_Missile() {
+	projectileType = projMissile;
+	target = NULL;
+	target_position = NULL;
+	target_velocity = NULL;
+}
+
+Projectile_Missile::Projectile_Missile(vec3f _position, vec3f _velocity, Object_virtual* _target, double _power, string _name, bool _is_affected_by_gravity){
+	name = _name;
+	projectileType = projMissile;
+	Point = Shape_Point(_position, _velocity);
+	is_affected_by_gravity = _is_affected_by_gravity;
+	target = _target;
+	power = _power;
+	Bind_target();
+}
+
+void Projectile_Missile::Bind_target() {
+	if(target != NULL) {
+		if(target->objectType == objSphere || target->objectType == objPolyhedron) {
+			target_position = &(target->englobing_sphere.position);
+			target_velocity = &(target->englobing_sphere.velocity);
+		} else if(target->objectType == objPlane) {
+			Object_Plane* plane = (Object_Plane*)target;
+			target_position = &(plane->plane.position);
+			target_velocity = &(plane->plane.velocity);
+		}
+	}
 }
