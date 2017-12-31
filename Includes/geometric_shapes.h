@@ -29,6 +29,7 @@ public:
 class Shape_Sphere : public Shape_virtual{
 public:
 	double radius;
+	double optim_sqradius;//Rayon au carré
 	
 	Shape_Sphere();
 	Shape_Sphere(vec3f _position, vec3f _velocity, double radius);

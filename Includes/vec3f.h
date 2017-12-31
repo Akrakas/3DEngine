@@ -106,27 +106,33 @@ public:
 // 	}
 
 	inline vec3f& normalize() {
-		if (length() == 0) return *this;
-		*this *= (1.0 / length());
+		double dlength = length();
+		if (dlength == 0) return *this;
+		*this *= (1.0 / dlength);
 		return *this;
 	}
 
 	inline vec3f normal() {
 		vec3f v1(x,y,z);
-		if (v1.length() == 0) return v1;
-		v1 *= (1.0 / v1.length());
+		double dlength = v1.length();
+		if (dlength == 0) return v1;
+		v1 *= (1.0 / dlength);
 		return v1;
 	}
 
 	inline double dist(vec3f v) const {
-		vec3f d(v.x - x, v.y - y, v.z - z);
-		return d.length();
+		return std::sqrt((v.x - x)*(v.x - x) + (v.y - y)*(v.y - y) + (v.z - z)*(v.z - z));
 	}
+	
+	inline double sqdist(vec3f v) const {
+		return (v.x - x)*(v.x - x) + (v.y - y)*(v.y - y) + (v.z - z)*(v.z - z);
+	}
+	
 	inline double length() const {
 		return std::sqrt(x * x + y * y + z * z);
 	}
 
-	inline double sqrlength() const {
+	inline double sqlength() const {
 		return (x * x + y * y + z * z);
 	}
 

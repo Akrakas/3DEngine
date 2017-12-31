@@ -21,6 +21,7 @@ Shape_Point::Shape_Point(vec3f _position, vec3f _velocity){
 Shape_Sphere::Shape_Sphere(){
 	shapeType = shapeSphere;
 	radius = 0;
+	optim_sqradius = 0;
 	position = vec3f(0,0,0);
 	velocity = vec3f(0,0,0);
 }
@@ -28,6 +29,7 @@ Shape_Sphere::Shape_Sphere(){
 Shape_Sphere::Shape_Sphere(vec3f _position, vec3f _velocity, double _radius){
 	shapeType = shapeSphere;
 	radius = _radius;
+	optim_sqradius = radius*radius;
 	position = _position;
 	velocity = _velocity;
 }
