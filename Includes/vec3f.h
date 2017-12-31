@@ -7,16 +7,19 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+#include <sstream>
 
 class vec3f {
 public:
 	double x, y, z;
 
-	vec3f() :x(0), y(0), z(0) {}
-	vec3f(double x, double y, double z) : x(x), y(y), z(z) {}
-	vec3f(const vec3f& v) : x(v.x), y(v.y), z(v.z) {}
+	inline vec3f() :x(0), y(0), z(0) {}
+	inline vec3f(double x, double y, double z) : x(x), y(y), z(z) {}
+	inline vec3f(const vec3f& v) : x(v.x), y(v.y), z(v.z) {}
 
-	vec3f& operator=(const vec3f& v) {
+	inline vec3f& operator=(const vec3f& v) {
 		x = v.x;
 		y = v.y;
 		z = v.z;
@@ -26,20 +29,20 @@ public:
 // 	vec3f operator+(vec3f& v) {
 // 		return vec3f(x + v.x, y + v.y, z + v.z);
 // 	}
-	vec3f operator+(vec3f v) {
+	inline vec3f operator+(vec3f v) {
 		return vec3f(x + v.x, y + v.y, z + v.z);
 	}
-	vec3f operator-(vec3f& v) {
+	inline vec3f operator-(vec3f& v) {
 		return vec3f(x - v.x, y - v.y, z - v.z);
 	}
 	
-	vec3f& operator+=(vec3f& v) {
+	inline vec3f& operator+=(vec3f& v) {
 		x += v.x;
 		y += v.y;
 		z += v.z;
 		return *this;
 	}
-	vec3f& operator-=(vec3f& v) {
+	inline vec3f& operator-=(vec3f& v) {
 		x -= v.x;
 		y -= v.y;
 		z -= v.z;
@@ -47,52 +50,52 @@ public:
 	}
 
 
-	vec3f operator+(double s) {
+	inline vec3f operator+(double s) {
 		return vec3f(x + s, y + s, z + s);
 	}
-	vec3f operator-(double s) {
+	inline vec3f operator-(double s) {
 		return vec3f(x - s, y - s, z - s);
 	}
-	vec3f operator*(double s) {
+	inline vec3f operator*(double s) {
 		return vec3f(x * s, y * s, z * s);
 	}
-	vec3f operator/(double s) {
+	inline vec3f operator/(double s) {
 		return vec3f(x / s, y / s, z / s);
 	}
 
 
-	vec3f& operator+=(double s) {
+	inline vec3f& operator+=(double s) {
 		x += s;
 		y += s;
 		z += s;
 		return *this;
 	}
-	vec3f& operator-=(double s) {
+	inline vec3f& operator-=(double s) {
 		x -= s;
 		y -= s;
 		z -= s;
 		return *this;
 	}
-	vec3f& operator*=(double s) {
+	inline vec3f& operator*=(double s) {
 		x *= s;
 		y *= s;
 		z *= s;
 		return *this;
 	}
-	vec3f& operator/=(double s) {
+	inline vec3f& operator/=(double s) {
 		x /= s;
 		y /= s;
 		z /= s;
 		return *this;
 	}
 
-	void set(double x, double y, double z) {
+	inline void set(double x, double y, double z) {
 		this->x = x;
 		this->y = y;
 		this->z = z;
 	}
 
-// 	void rotate(double deg) {
+// 	inline void rotate(double deg) {
 // 		double theta = deg / 180.0 * M_PI;
 // 		double c = cos(theta);
 // 		double s = sin(theta);
@@ -102,55 +105,57 @@ public:
 // 		y = ty;
 // 	}
 
-	vec3f& normalize() {
+	inline vec3f& normalize() {
 		if (length() == 0) return *this;
 		*this *= (1.0 / length());
 		return *this;
 	}
 
-	vec3f normal() {
+	inline vec3f normal() {
 		vec3f v1(x,y,z);
 		if (v1.length() == 0) return v1;
 		v1 *= (1.0 / v1.length());
 		return v1;
 	}
 
-	double dist(vec3f v) const {
+	inline double dist(vec3f v) const {
 		vec3f d(v.x - x, v.y - y, v.z - z);
 		return d.length();
 	}
-	double length() const {
+	inline double length() const {
 		return std::sqrt(x * x + y * y + z * z);
 	}
 
-	double sqrlength() const {
+	inline double sqrlength() const {
 		return (x * x + y * y + z * z);
 	}
 
-	vec3f truncate(double length) {
+	inline vec3f truncate(double length) {
 		vec3f normal = this->normal();
 		normal *= length;
 		return normal;
 	}
 
-//	vec3f ortho() const {
+//	inline vec3f ortho() const {
 //		return vec3f(y, -x);
 //	}
 
-	double dot(vec3f v) {
+	inline double dot(vec3f v) {
 		return x * v.x + y * v.y + z * v.z;
 	}
 
-	void reverse() {
+	inline void reverse() {
 		x = -x;
 		y = -y;
 		z = -z;
 	}
 
-	void print() {
-		printf("x = %f, y = %f, z = %f\n", x, y, z);
+	std::string print() {
+		std::stringstream output;
+		output << "x = " << x << ", y = " << y << ", z = " << z;
+		return output.str();
 	}
-// 	static double cross(vec3f v1, vec3f v2) {
+// 	inline static double cross(vec3f v1, vec3f v2) {
 // 		return (v1.x * v2.y) - (v1.y * v2.x);
 // 	}
 };

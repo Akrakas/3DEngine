@@ -5,7 +5,8 @@
 //Renvois les coordonnées de la projection du point p sur la ligne line_point->line_vec_norm
 vec3f ClosestPointOnLine(vec3f line_point, vec3f line_vec_norm, vec3f point) {
     vec3f l1minp = point-line_point;
-    double t = l1minp.dot(line_vec_norm);
+    //double t = l1minp.dot(line_vec_norm);
+	double t = l1minp.x*line_vec_norm.x + l1minp.y*line_vec_norm.y + l1minp.z*line_vec_norm.z;
     vec3f l2multp = (line_vec_norm * t);
     return line_point + l2multp;
 }
