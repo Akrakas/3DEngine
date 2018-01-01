@@ -151,10 +151,7 @@ void Engine::step_withlist(double timestep) {
 				cout << "Evenement inconnu. Ne devrait pas arriver." << endl;
 				erase_evenement_withlist(event);
 			}
-			
-
 		}
-		
 		timestep -= max_timestep;
 	} while(timestep > 0);
 }

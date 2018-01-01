@@ -23,6 +23,5 @@ bool optim_LineContinuousCollisionSphere(Shape_Point* Projectile, Shape_Sphere* 
 bool optim_LineContinuousCollisionPlane(Shape_Point* Projectile, Shape_Plane* Plane, double* time_before_collision);
 bool optim_LineContinuousCollisionPolygon(Shape_Point* Projectile, Shape_Polygon* Polygon, double* time_before_collision);
 
-
 double optim_invsqrt(double number);
 #endif

@@ -166,7 +166,7 @@ bool optim_LineContinuousCollisionPolygon(Shape_Point* Projectile, Shape_Polygon
 }
 
 //Ne donne pas un résultat exact à moins de faire quelques iterations : utilisation dangereuse
-double optim_invsqrt( double number ) {
+double optim_invsqrt(double number) {
 	double y = number;
 	double x2 = y * 0.5;
 	std::int64_t i = *(std::int64_t *) &y; // evil floating point bit level hacking
