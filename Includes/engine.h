@@ -73,6 +73,7 @@ public:
 	
 	void update_collision_sphere_withlist(Object_Sphere* affected_object);
 	void update_collision_plane_withlist(Object_Plane* affected_object);
+	void update_collision_polygon_withlist(Object_Polygon* affected_object);
 	void create_collision_projectile_withlist(Projectile_virtual* affected_projectile);
 	void update_collision_projectile_withlist(Projectile_virtual* affected_projectile, Event_virtual* event);
 	bool erase_evenement_withlist(Event_virtual* event);
@@ -85,6 +86,7 @@ public:
 	Projectile_Missile* create_missile_withlist(vec3f position, vec3f velocity, Object_virtual* target, double power, string name, bool is_affected_by_gravity, bool is_destroyed_on_contact);
 	Object_Sphere* create_sphere_withlist(vec3f position, vec3f velocity, double radius, string name, string aipath_filename, bool immaterial);
 	Object_Plane* create_plane_withlist(vec3f position, vec3f velocity, vec3f normale, string name, string aipath_filename, bool immaterial);
+	Object_Polygon* create_polygon_withlist(vec3f position, vec3f velocity, vec3f normale, string name, string aipath_filename, bool immaterial);
 	void load_config_from_json(string config_filename);
 	void load_world_from_json(string filename);
 	void load_aipath_from_json(Object_virtual* affected_object, string aipath_filename);

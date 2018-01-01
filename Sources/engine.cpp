@@ -69,6 +69,9 @@ void Engine::step_withlist(double timestep) {
 			} else if((*(it_object))->objectType == objPlane) {
 				Object_Plane* Plane = (Object_Plane*)(*it_object);
 				Plane->plane.position =  Plane->plane.position + (Plane->plane.velocity * max_timestep);
+			} else if((*(it_object))->objectType == objPolygon) {
+				Object_Polygon* Polygon = (Object_Polygon*)(*it_object);
+				Polygon->polygon.position =  Polygon->polygon.position + (Polygon->polygon.velocity * max_timestep);
 			}
 		}
 		
@@ -172,13 +175,13 @@ bool Engine::get_earliest_event_withlist(Event_virtual** event) {
 Object_Sphere* Engine::create_sphere_withlist(vec3f position, vec3f velocity, double radius, string name, string aipath_filename, bool immaterial) {
 	if(objets_list.size() < MAX_OBJECTS) {
 		Object_Sphere* new_sphere_ptr = new Object_Sphere(position, velocity, radius, name);
-		objets_list.insert(objets_list.begin(), new_sphere_ptr);
 		update_collision_sphere_withlist(new_sphere_ptr);
 		if(aipath_filename.size() != 0) {
 			load_aipath_from_json(new_sphere_ptr, aipath_filename);
 		}
 		new_sphere_ptr->immaterial = immaterial;
 		cout << "Creation de l'objet \"" << new_sphere_ptr->name << "\" à T=" << elapsed_time << endl;
+		objets_list.insert(objets_list.begin(), new_sphere_ptr);
 		return new_sphere_ptr;
 	} else {
 		return NULL;
@@ -188,14 +191,34 @@ Object_Sphere* Engine::create_sphere_withlist(vec3f position, vec3f velocity, do
 Object_Plane* Engine::create_plane_withlist(vec3f position, vec3f velocity, vec3f normale, string name, string aipath_filename, bool immaterial) {
 	if(objets_list.size() < MAX_OBJECTS) {
 		Object_Plane* new_plane_ptr = new Object_Plane(position, velocity, normale, name);
-		objets_list.insert(objets_list.begin(), new_plane_ptr);
 		update_collision_plane_withlist(new_plane_ptr);
 		if(aipath_filename.size() != 0) {
 			load_aipath_from_json(new_plane_ptr, aipath_filename);
 		}
 		new_plane_ptr->immaterial = immaterial;
 		cout << "Creation de l'objet \"" << new_plane_ptr->name << "\" à T=" << elapsed_time << endl;
+		objets_list.insert(objets_list.begin(), new_plane_ptr);
 		return new_plane_ptr;
+	} else {
+		return NULL;
+	}
+}
+
+Object_Polygon* Engine::create_polygon_withlist(vec3f position, vec3f velocity, vec3f normale, string name, string aipath_filename, bool immaterial) {
+	if(objets_list.size() < MAX_OBJECTS) {
+		Object_Polygon* new_polygon_ptr = new Object_Polygon(position, velocity, normale, name);
+		new_polygon_ptr->polygon.add_side(vec3f(1,0,0));
+		new_polygon_ptr->polygon.add_side(vec3f(0,1,0));
+		new_polygon_ptr->polygon.add_side(vec3f(-1,0,0));
+		new_polygon_ptr->polygon.add_side(vec3f(0,-1,0));
+		update_collision_polygon_withlist(new_polygon_ptr);
+		if(aipath_filename.size() != 0) {
+			load_aipath_from_json(new_polygon_ptr, aipath_filename);
+		}
+		new_polygon_ptr->immaterial = immaterial;
+		cout << "Creation de l'objet \"" << new_polygon_ptr->name << "\" à T=" << elapsed_time << endl;
+		objets_list.insert(objets_list.begin(), new_polygon_ptr);
+		return new_polygon_ptr;
 	} else {
 		return NULL;
 	}
@@ -305,6 +328,25 @@ void Engine::update_collision_plane_withlist(Object_Plane* affected_object) {
 	}
 }
 
+void Engine::update_collision_polygon_withlist(Object_Polygon* affected_object) {
+	for (list<Event_virtual*>::iterator it_event=evenements_list.begin(); it_event != evenements_list.end(); ++it_event) {
+		if((*it_event)->eventType == eventCollision) {
+			Event_Collision* collision = (Event_Collision*)(*it_event);
+			if(collision->affected_object == affected_object) { //Le projectile rentrait en collision avec l'objet modifié, on lui fait tout verifier
+				update_collision_projectile_withlist(collision->affected_projectile, (*it_event));
+			} else { //Le projectile ne rentrait pas en collision avec l'objet modifié, on verifie si c'est le cas maintenant
+				double time_before_collision;
+				if(LineContinuousCollisionPolygon(&(collision->affected_projectile->Point), &(affected_object->polygon), &time_before_collision)) {
+					if(elapsed_time + time_before_collision < collision->time_of_event) {
+						collision->affected_object = affected_object;
+						collision->time_of_event = elapsed_time + time_before_collision;
+					}
+				}
+			}
+		}
+	}
+}
+
 void Engine::create_collision_projectile_withlist(Projectile_virtual* affected_projectile) {	
 	Event_Collision* new_event = new Event_Collision();
 	new_event->affected_projectile = affected_projectile;
@@ -320,6 +362,14 @@ void Engine::create_collision_projectile_withlist(Projectile_virtual* affected_p
 		} else if((*(it_object))->objectType == objPlane) {
 			Object_Plane* Plane = (Object_Plane*)(*it_object);
 			if(LineContinuousCollisionPlane(&(affected_projectile->Point), &(Plane->plane), &time_before_collision)) {
+				if(elapsed_time + time_before_collision < new_event->time_of_event) {
+					new_event->affected_object = (*it_object);
+					new_event->time_of_event = elapsed_time + time_before_collision;
+				}
+			}
+		} else if((*(it_object))->objectType == objPolygon) {
+			Object_Polygon* Polygon = (Object_Polygon*)(*it_object);
+			if(LineContinuousCollisionPolygon(&(affected_projectile->Point), &(Polygon->polygon), &time_before_collision)) {
 				if(elapsed_time + time_before_collision < new_event->time_of_event) {
 					new_event->affected_object = (*it_object);
 					new_event->time_of_event = elapsed_time + time_before_collision;
@@ -345,6 +395,14 @@ void Engine::update_collision_projectile_withlist(Projectile_virtual* affected_p
 		} else if((*(it_object))->objectType == objPlane) {
 			Object_Plane* Plane = (Object_Plane*)(*it_object);
 			if(LineContinuousCollisionPlane(&(affected_projectile->Point), &(Plane->plane), &time_before_collision)) {
+				if(elapsed_time + time_before_collision < collision->time_of_event) {
+					collision->affected_object = (*it_object);
+					collision->time_of_event = elapsed_time + time_before_collision;
+				}
+			}
+		} else if((*(it_object))->objectType == objPolygon) {
+			Object_Polygon* Polygon = (Object_Polygon*)(*it_object);
+			if(LineContinuousCollisionPolygon(&(affected_projectile->Point), &(Polygon->polygon), &time_before_collision)) {
 				if(elapsed_time + time_before_collision < collision->time_of_event) {
 					collision->affected_object = (*it_object);
 					collision->time_of_event = elapsed_time + time_before_collision;

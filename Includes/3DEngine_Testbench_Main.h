@@ -18,11 +18,6 @@
 #include "world_objects.h" //Objects used in the Engine class
 #include "engine.h" //Combine Objects and Interactions
 
-#define IMG_X 400
-#define IMG_Y 800
-#define ENV_X 50
-#define ENV_Y 100
-
 using namespace std;
 
 
